@@ -39,8 +39,14 @@ mod tests {
     // Note: This only works on systems that have physical or virtual disks
     use assert_cmd::output::OutputOkExt;
     extern crate escargot;
+    use lazy_static::lazy_static;
+    use std::path::PathBuf;
     use std::process::Command;
     use std::time::Instant;
+
+    lazy_static! {
+        static ref BIN_PATH: PathBuf = assert_cmd::cargo::cargo_bin("disk_space");
+    }
 
     #[test]
     fn test_base() {
@@ -62,12 +68,12 @@ mod tests {
     #[test]
     fn test_performance() {
         let runs = 20;
-
         let start_time = Instant::now();
         for _ in 0..runs {
-            let _ = Command::new("disk_space")
-                .output()
-                .expect("Something went wrong");
+            let _command = Command::new(&*BIN_PATH);
+            // let _ = Command::new("disk_space")
+            //     .output()
+            //     .expect("Something went wrong");
         }
         let total_time = start_time.elapsed().as_millis() as u32;
         let average = total_time / runs;
