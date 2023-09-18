@@ -1,45 +1,34 @@
-use std::process::Command;
+use std::collections::HashSet;
+use sysinfo::{DiskExt, System, SystemExt};
 
-/*
-   Use standard Linux df to get stats for disk usage. Although we could get these values
-   directly, its not worth re-engineering it when df gives us decent results and is fast
-   enough.
-
-   This is primarily called by a logger like fluentbit to Loki or simiilar remote.
-*/
 fn main() {
-    // Get df results and omit any disk that is not physical.
-    let output = Command::new("df")
-        .arg("-x tmpfs")
-        .arg("-x devtmpfs")
-        .arg("-x fuseblk")
-        .output()
-        .expect("failed to execute process");
+    let mut system = System::new();
+    system.refresh_disks_list();
+    let mut devices = HashSet::new();
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    if !output.status.success() {
-        eprintln!("command returned non-zero exit status:\n{}", stderr);
-        return;
-    }
-
-    // For each entry in df output, format and output in an easy to digest way.
-    for line in stdout.lines().skip(1) {
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        let device = parts[0];
-        let size = parts[1];
-        let used = parts[2];
-        let available = parts[3];
-        let used_percent = parts[4].trim_end_matches('%');
-        let mount_point = parts[5];
-
-        if device.starts_with("/dev") {
-            println!(
-                "disk_space device={} mount_point={} size={} used={} available={} used_percent={}",
-                device, mount_point, size, used, available, used_percent
-            );
+    for disk in system.disks() {
+        let name = disk.name().to_os_string();
+        if devices.contains(&name) {
+            continue;
         }
+
+        let mount_point = disk.mount_point();
+        let total = disk.total_space() / 1024;
+        let available = disk.available_space() / 1024;
+        let used = total - available;
+        let used_pct: f32 = ((used as f32 / total as f32) * 100.0).round() as f32;
+
+        println!(
+            "disk_space device={} mount_point={} size={} used={} available={} used_percent={}",
+            name.to_string_lossy(),
+            mount_point.to_string_lossy(),
+            total,
+            used,
+            available,
+            used_pct
+        );
+
+        devices.insert(name);
     }
 }
 
@@ -72,7 +61,7 @@ mod tests {
 
     #[test]
     fn test_performance() {
-        let runs = 10;
+        let runs = 20;
 
         let start_time = Instant::now();
         for _ in 0..runs {
@@ -85,6 +74,6 @@ mod tests {
         println!("Total time: {} ms ", total_time);
         println!("Average time: {} ms ", average);
         // Make sure performance is less thatn 4 millis
-        assert!(average <= 4);
+        assert!(average <= 2);
     }
 }
