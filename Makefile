@@ -1,4 +1,4 @@
-
+BINARY_PATH := /opt/bin
 build:
 	cargo build
 
@@ -10,6 +10,7 @@ clean:
 
 install:
 	cargo install --path disk_space
+	cp $(HOME)/.cargo/bin/disk_space $(BINARY_PATH)
 
 doc:
 	cargo doc
