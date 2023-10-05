@@ -14,19 +14,19 @@ and as such take the philosophy:
 Disk Stats
 ===========
 Fluentbit does alot already, but it seems to lack Disk statistics. It has a
-*Disk Usage* module, but it only measures IO characteristics, not usage
-size amounts. When disks fill up, systems tend to crash, so we really want to
-know size data.
+*Disk Usage* module, but it only measures IO characteristics, not usage size
+amounts. When disks fill up, systems tend to crash, so we really want to know
+size data.
 
 As such we provide a tool called disk_space to collect this.
 It is meant to be called by Fluentbit's Exec input plugin::
 
     [INPUT]
-        Name          disks
-        Tag           disk_stats
-        Command       disk_space
-        Interval_Sec  240
-        Parser        logfmt
+        Name disk_space
+        Tag  disk_stats
+        Command /opt/bin/disk_space
+        Interval_Sec 600
+        Parser logfmt
 
     [OUTPUT]
         Name             loki
@@ -42,8 +42,8 @@ re-implement a low-level too. It only works on Linux at this time.
 Installation
 ================
 
-* make install: This will all tools install it to your local ~/.cargo/bin/
-  folder but you may want to move them to a common utility folder.
+* make install: This will all tools install it to the user ~/.cargo/bin/
+  folder and to /opt/bin if you have permissions.
 
 Testing
 ============
