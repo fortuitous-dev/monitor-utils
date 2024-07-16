@@ -46,12 +46,12 @@ fn main() {
         let used = total - available;
         let used_pct: f32 = ((used as f32 / total as f32) * 100.0).round() as f32;
         // Set level of severity for logger
-        if used_pct < 90.0 {
-            level = "info".to_string();
-        } else if used_pct >= 95.0 {
+        if used_pct > 95.0 {
             level = "critical".to_string();
+        } else if used_pct >= 90.0 {
+            level = "warning".to_string();
         } else {
-            level = "warning".to_string()
+            level = "info".to_string()
         };
 
         println!(
