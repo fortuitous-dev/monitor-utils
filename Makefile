@@ -8,9 +8,11 @@ release:
 clean:
 	cargo clean
 
-install:
+~/.cargo/bin/disk_space:
 	cargo install --path disk_space
 	cp $(HOME)/.cargo/bin/disk_space $(BINARY_PATH)
+
+install: ~/.cargo/bin/disk_space
 
 doc:
 	cargo doc
